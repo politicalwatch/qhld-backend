@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="tipi-backend",
+    name="qhld-backend",
     version="1.0.0",
-    description="TIPI Backend",
-    url="https://github.com/politicalwatch/tipi-backend",
+    description="QHLD Backend",
+    url="https://github.com/politicalwatch/qhld-backend",
     author="pr3ssh",
     packages=find_packages(),
     install_requires=[

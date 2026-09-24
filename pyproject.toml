@@ -8,7 +8,7 @@ requires-python = ">=3.12"
 dependencies = [
     "fastapi==0.141.1",
     "pydantic-settings==2.15.0",
-    "uvicorn[standard]==0.52.4",
+    "uvicorn[standard]==0.53.0",
     "slowapi==0.1.10",
     # redis-py is capped at <6.5 by qhld-tasks' celery 5.6.3 / kombu[redis]
     "redis==6.4.0",
@@ -32,7 +32,7 @@ dev = [
     "pytest==9.1.1",
     "pytest-cov==7.1.0",
     "httpx2==2.12.0",
-    "locust==2.46.4",
+    "locust==2.46.6",
     # Ollama embeddings for local dev only; the prod image runs with --no-dev
     # and stays on the lean [backend] set above. Other providers install ad-hoc.
     "qhld-ai[ollama]",

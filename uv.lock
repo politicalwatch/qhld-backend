@@ -2854,7 +2854,7 @@ wheels = [
 [[package]]
 name = "qhld-ai"
 version = "0.1.0"
-source = { git = "https://github.com/politicalwatch/qhld-ai.git?branch=feat%2Fparliamentary-speech-analysis#edb0bb12eef1aebbfa4f5fceca920d1143db7a2d" }
+source = { git = "https://github.com/politicalwatch/qhld-ai.git?branch=feat%2Fparliamentary-speech-analysis#1e21976d719120bce667adc6d5108d3f33280cd6" }
 dependencies = [
     { name = "httpx" },
     { name = "langchain-core" },

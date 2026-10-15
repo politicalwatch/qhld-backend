@@ -31,7 +31,7 @@ dev = [
     "ipdb==0.13.13",
     "pytest==9.1.1",
     "pytest-cov==7.1.0",
-    "httpx2==2.12.0",
+    "httpx2==2.13.1",
     "locust==2.46.6",
     # Ollama embeddings for local dev only; the prod image runs with --no-dev
     # and stays on the lean [backend] set above. Other providers install ad-hoc.

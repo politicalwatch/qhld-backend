@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 
 dependencies = [
     "fastapi==0.141.1",
-    "pydantic-settings==2.15.0",
+    "pydantic-settings==2.16.0",
     "uvicorn[standard]==0.53.0",
     "slowapi==0.1.10",
     # redis-py is capped at <6.5 by qhld-tasks' celery 5.6.3 / kombu[redis]

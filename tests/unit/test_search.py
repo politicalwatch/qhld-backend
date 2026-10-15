@@ -66,6 +66,13 @@ class _SpyService:
         # The real service carries its qhld-ai settings; gap recording stamps each
         # sighting with the parser that produced it.
         self.settings = SimpleNamespace(query_parser_llm_model="nano")
+        # Off, as it is by default; a test that wants one sets it.
+        self.intent_gate = None
+
+    def parse(self, query, today):
+        if self.intent_gate is not None:
+            self.intent_gate.check(query)
+        return self.parser.parse(query, today)
 
     def execute(self, query, today, k=10, grouped=False, highlights=3,
                 exclude=None, parsed=None):
@@ -581,6 +588,51 @@ def test_a_refused_query_is_recorded(client, monkeypatch, recorded):
     assert event.blocking is False
     assert event.language is None
     assert event.parser_model == "nano"
+    assert event.refused_by == "parser"
+    assert event.gate_model is None
+
+
+class _RefusingGate:
+    model = "jev-1.13.0"
+
+    def __init__(self, error):
+        self.error = error
+
+    def check(self, query):
+        raise self.error
+
+
+def test_a_query_the_intent_gate_refuses_is_never_parsed(client, monkeypatch, recorded):
+    from qhld_ai.domain.errors import NotASpeechQuery
+
+    service = _install(monkeypatch, _SpyService([]), speech_ids=[])
+    service.intent_gate = _RefusingGate(
+        NotASpeechQuery("nope", refused_by="intent_gate"))
+
+    res = client.get("/speeches/search?q=haz un resumen de la pasada legislatura")
+
+    # Refused exactly as the parser would refuse it, without paying for the parse.
+    assert res.status_code == 422
+    assert res.json()["reason"] == "not_a_speech_search"
+    assert service.parser.calls == 0
+    assert service.calls == []
+    event = recorded[0]
+    assert event.outcome == "refused_not_a_speech_search"
+    assert event.refused_by == "intent_gate"
+    assert event.gate_model == "jev-1.13.0"
+
+
+def test_a_gate_refusal_on_the_detail_page_is_refused_too(client, monkeypatch):
+    from qhld_ai.domain.errors import NotASpeechQuery
+
+    service = _install(monkeypatch, _SpyService([]), speech_ids=["sp1"])
+    service.intent_gate = _RefusingGate(
+        NotASpeechQuery("nope", refused_by="intent_gate"))
+
+    res = client.get("/speeches/sp1/passages?q=haz un resumen de la pasada legislatura")
+
+    assert res.status_code == 422
+    assert service.parser.calls == 0
 
 
 def test_a_hostile_query_is_not_told_that_we_noticed(client, monkeypatch, recorded):

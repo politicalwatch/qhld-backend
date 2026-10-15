@@ -415,8 +415,13 @@ def _natural_search():
 @lru_cache(maxsize=256)
 def _parse_query(q, today_iso):
     """Memoized LLM parse: "show more" repeats the same query with a longer
-    exclude list, and must not pay (nor re-run) the parse on every click."""
-    return _natural_search().parser.parse(q, date.fromisoformat(today_iso))
+    exclude list, and must not pay (nor re-run) the parse on every click.
+
+    Goes through the service's ``parse`` rather than its parser, so the intent gate
+    runs first and a query it refuses never pays for the LLM call. A refusal raises,
+    and ``lru_cache`` does not cache an exception: a refused query is checked again
+    each time, which costs one cheap classification."""
+    return _natural_search().parse(q, date.fromisoformat(today_iso))
 
 
 # Which resolver fields are worth mining. ``mentions`` and ``speaker`` are people, the
@@ -481,6 +486,12 @@ def _refusal_key(query):
     return _strip_accents(" ".join(query.split()).casefold())[:KEY_MAX]
 
 
+def _gate_model():
+    """The decision model behind the intent gate, or None when the gate is off."""
+    gate = getattr(_natural_search(), "intent_gate", None)
+    return gate.model if gate is not None else None
+
+
 def _record_refusal(query, refusal):
     """Keep the queries the search gates turned away.
 
@@ -509,7 +520,10 @@ def _record_refusal(query, refusal):
             # Present only on a language refusal, which is the one case where the parser
             # reached a verdict about the query worth keeping.
             language=getattr(refusal, "language", None),
-            parser_model=_natural_search().settings.query_parser_llm_model))
+            parser_model=_natural_search().settings.query_parser_llm_model,
+            # Which layer refused it: a refusal by the intent gate never paid for a parse.
+            refused_by=getattr(refusal, "refused_by", None),
+            gate_model=_gate_model()))
     except Exception:
         log.exception("Could not record the refusal of %r", query)
 
